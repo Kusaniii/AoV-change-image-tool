@@ -1,168 +1,215 @@
 (() => {
-const input=document.createElement("input");
-input.type="file";
-input.accept="image/*";
-input.onchange=()=>{
-const file=input.files[0];
-if(!file)return;
-const url=URL.createObjectURL(file);
-const img=new Image();
-img.src=url;
-img.onload=()=>{
-const box=document.createElement("div");
-const canvas=document.createElement("canvas");
-const ctx=canvas.getContext("2d");
-const cropBtn=document.createElement("button");
-const originalBtn=document.createElement("button");
-const resetBtn=document.createElement("button");
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = () => {
+        const file = input.files[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.src = url;
+        img.onload = () => {
+            const box = document.createElement("div");
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            
+            const btnGroup = document.createElement("div");
+            const cropBtn = document.createElement("button");
+            const originalBtn = document.createElement("button");
+            const resetBtn = document.createElement("button");
+            const closeBtn = document.createElement("button");
 
-canvas.width=372;
-canvas.height=586;
+            // Kích thước chuẩn muốn crop
+            canvas.width = 372;
+            canvas.height = 586;
 
-box.style="position:fixed;inset:10px;background:#111;z-index:999999;text-align:center;padding:10px";
-canvas.style="width:100%;touch-action:none;display:block";
+            // --- 1. TỐI ƯU CSS CHO GIAO DIỆN (PC & MOBILE) ---
+            box.style = "position:fixed; inset:0; background:rgba(17,17,17,0.95); z-index:999999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:15px; box-sizing:border-box;";
+            
+            // max-height: 75vh giúp canvas không bị tràn chiều dọc trên điện thoại
+            // object-fit: contain giúp giữ nguyên tỉ lệ ảnh
+            canvas.style = "max-width:100%; max-height:75vh; object-fit:contain; touch-action:none; background:#000; box-shadow:0 0 15px rgba(0,0,0,0.8);";
 
-cropBtn.textContent="Crop";
-originalBtn.textContent="Gốc";
-resetBtn.textContent="Reset";
+            btnGroup.style = "display:flex; gap:10px; margin-top:20px; flex-wrap:wrap; justify-content:center;";
+            
+            const btnStyle = "padding:12px 20px; font-size:16px; font-weight:bold; border:none; border-radius:6px; cursor:pointer; color:#fff;";
+            cropBtn.style = btnStyle + "background:#28a745;";
+            originalBtn.style = btnStyle + "background:#007bff;";
+            resetBtn.style = btnStyle + "background:#ffc107; color:#212529;";
+            closeBtn.style = btnStyle + "background:#dc3545;";
 
-box.append(canvas,cropBtn,originalBtn,resetBtn);
-document.body.append(box);
+            cropBtn.textContent = "Crop";
+            originalBtn.textContent = "Gốc";
+            resetBtn.textContent = "Reset";
+            closeBtn.textContent = "Đóng";
 
-let scale=Math.max(372/img.width,586/img.height);
-let cropW=372/scale;
-let cropH=586/scale;
+            btnGroup.append(cropBtn, originalBtn, resetBtn, closeBtn);
+            box.append(canvas, btnGroup);
+            document.body.append(box);
 
-let x=(img.width-cropW)/2;
-let y=(img.height-cropH)/2;
+            // --- 2. LOGIC TÍNH TOÁN ---
+            let scale = Math.max(372 / img.width, 586 / img.height);
+            let cropW = 372 / scale;
+            let cropH = 586 / scale;
 
-let zoom=1;
-let minZoom=1;
-let maxZoom=3;
+            let x = (img.width - cropW) / 2;
+            let y = (img.height - cropH) / 2;
 
-let dragging=false;
-let lastX=0;
-let lastY=0;
-let lastDist=0;
+            let zoom = 1;
+            let minZoom = 0.2; 
+            let maxZoom = 3;
 
-function draw(){
-ctx.clearRect(0,0,372,586);
-let w=cropW*zoom;
-let h=cropH*zoom;
-ctx.drawImage(img,x,y,w,h,0,0,372,586);
-}
+            let dragging = false;
+            let lastX = 0;
+            let lastY = 0;
+            let lastDist = 0;
 
-function limit(){
-let w=cropW*zoom;
-let h=cropH*zoom;
-x=Math.max(0,Math.min(x,img.width-w));
-y=Math.max(0,Math.min(y,img.height-h));
-}
+            function draw() {
+                ctx.clearRect(0, 0, 372, 586);
+                let w = cropW * zoom;
+                let h = cropH * zoom;
+                ctx.drawImage(img, x, y, w, h, 0, 0, 372, 586);
+            }
 
-function move(px,py){
-let r=canvas.getBoundingClientRect();
-x-=((px-lastX)/r.width)*cropW;
-y-=((py-lastY)/r.height)*cropH;
-limit();
-lastX=px;
-lastY=py;
-draw();
-}
+            function limit() {
+                let w = cropW * zoom;
+                let h = cropH * zoom;
+                x = Math.max(0, Math.min(x, img.width - w));
+                y = Math.max(0, Math.min(y, img.height - h));
+            }
 
-draw();
+            function move(px, py) {
+                let r = canvas.getBoundingClientRect();
+                // Đồng bộ tốc độ di chuột/cảm ứng với mức độ zoom hiện tại
+                x -= ((px - lastX) / r.width) * (cropW * zoom);
+                y -= ((py - lastY) / r.height) * (cropH * zoom);
+                limit();
+                lastX = px;
+                lastY = py;
+                draw();
+            }
 
-canvas.addEventListener("pointerdown",e=>{
-dragging=true;
-lastX=e.clientX;
-lastY=e.clientY;
-canvas.setPointerCapture(e.pointerId);
-});
+            draw();
 
-canvas.addEventListener("pointermove",e=>{
-if(!dragging)return;
-e.preventDefault();
-move(e.clientX,e.clientY);
-},{passive:false});
+            // --- 3. XỬ LÝ SỰ KIỆN CHUỘT (PC) ---
+            canvas.addEventListener("pointerdown", e => {
+                if (e.pointerType === 'touch') return; // Bỏ qua nếu là cảm ứng
+                dragging = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                canvas.setPointerCapture(e.pointerId);
+            });
 
-canvas.addEventListener("pointerup",()=>{
-dragging=false;
-});
+            canvas.addEventListener("pointermove", e => {
+                if (!dragging || e.pointerType === 'touch') return;
+                e.preventDefault();
+                move(e.clientX, e.clientY);
+            }, { passive: false });
 
-canvas.addEventListener("touchmove",e=>{
-if(e.touches.length===2){
-e.preventDefault();
+            canvas.addEventListener("pointerup", () => {
+                dragging = false;
+            });
 
-let a=e.touches[0];
-let b=e.touches[1];
+            canvas.addEventListener("wheel", e => {
+                e.preventDefault();
+                zoom += e.deltaY > 0 ? 0.1 : -0.1; // Cập nhật hướng zoom tự nhiên
+                zoom = Math.max(minZoom, Math.min(maxZoom, zoom));
+                limit();
+                draw();
+            }, { passive: false });
 
-let cx=((a.clientX+b.clientX)/2-canvas.getBoundingClientRect().left)/canvas.getBoundingClientRect().width*372;
-let cy=((a.clientY+b.clientY)/2-canvas.getBoundingClientRect().top)/canvas.getBoundingClientRect().height*586;
 
-let dist=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
+            // --- 4. XỬ LÝ SỰ KIỆN CẢM ỨNG (MOBILE) ---
+            let activeTouches = 0;
 
-if(lastDist){
-let oldZoom=zoom;
+            canvas.addEventListener("touchstart", e => {
+                activeTouches = e.touches.length;
+                if (activeTouches === 1) { // Pan 1 ngón
+                    lastX = e.touches[0].clientX;
+                    lastY = e.touches[0].clientY;
+                } else if (activeTouches === 2) { // Zoom 2 ngón
+                    lastDist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            }, { passive: false });
 
-zoom+=(dist-lastDist)/300;
-zoom=Math.max(minZoom,Math.min(maxZoom,zoom));
+            canvas.addEventListener("touchmove", e => {
+                e.preventDefault();
+                if (e.touches.length === 1 && activeTouches === 1) {
+                    move(e.touches[0].clientX, e.touches[0].clientY);
+                } else if (e.touches.length === 2) {
+                    let a = e.touches[0];
+                    let b = e.touches[1];
 
-let ratio=zoom/oldZoom;
+                    let r = canvas.getBoundingClientRect();
+                    let cx = (((a.clientX + b.clientX) / 2) - r.left) / r.width * 372;
+                    let cy = (((a.clientY + b.clientY) / 2) - r.top) / r.height * 586;
 
-x+=(cx/oldZoom)*(1-ratio);
-y+=(cy/oldZoom)*(1-ratio);
+                    let dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
 
-limit();
-draw();
-}
+                    if (lastDist) {
+                        let oldZoom = zoom;
+                        // Zoom Out / In tự nhiên
+                        zoom -= (dist - lastDist) / 300;
+                        zoom = Math.max(minZoom, Math.min(maxZoom, zoom));
 
-lastDist=dist;
-}
-},{passive:false});
+                        let ratio = zoom / oldZoom;
+                        x += (cx / oldZoom) * (1 - ratio);
+                        y += (cy / oldZoom) * (1 - ratio);
 
-canvas.addEventListener("touchend",()=>{
-lastDist=0;
-});
+                        limit();
+                        draw();
+                    }
+                    lastDist = dist;
+                }
+            }, { passive: false });
 
-canvas.addEventListener("wheel",e=>{
-e.preventDefault();
-zoom+=e.deltaY<0?0.1:-0.1;
-zoom=Math.max(minZoom,Math.min(maxZoom,zoom));
-limit();
-draw();
-},{passive:false});
+            canvas.addEventListener("touchend", e => {
+                activeTouches = e.touches.length;
+                if (activeTouches === 1) {
+                    lastX = e.touches[0].clientX;
+                    lastY = e.touches[0].clientY;
+                }
+                lastDist = 0;
+            });
 
-resetBtn.onclick=()=>{
-zoom=1;
-cropW=372/scale;
-cropH=586/scale;
-x=(img.width-cropW)/2;
-y=(img.height-cropH)/2;
-draw();
-};
+            // --- 5. CÁC NÚT ĐIỀU KHIỂN ---
+            resetBtn.onclick = () => {
+                zoom = 1;
+                cropW = 372 / scale;
+                cropH = 586 / scale;
+                x = (img.width - cropW) / 2;
+                y = (img.height - cropH) / 2;
+                draw();
+            };
 
-function findTarget(){
-return [...document.images].find(img=>{
-let r=img.getBoundingClientRect();
-return Math.abs(r.width-372)<20&&Math.abs(r.height-586)<20;
-});
-}
+            closeBtn.onclick = () => {
+                box.remove();
+            };
 
-cropBtn.onclick=()=>{
-let target=findTarget();
-if(!target)return alert("Không tìm thấy ảnh");
-target.src=canvas.toDataURL("image/png");
-box.remove();
-alert("Done");
-};
+            function findTarget() {
+                return [...document.images].find(img => {
+                    let r = img.getBoundingClientRect();
+                    return Math.abs(r.width - 372) < 20 && Math.abs(r.height - 586) < 20;
+                });
+            }
 
-originalBtn.onclick=()=>{
-let target=findTarget();
-if(!target)return alert("Không tìm thấy ảnh");
-target.src=url;
-box.remove();
-alert("Done");
-};
-};
-};
-input.click();
+            cropBtn.onclick = () => {
+                let target = findTarget();
+                if (!target) return alert("Không tìm thấy ảnh đích trên trang.");
+                target.src = canvas.toDataURL("image/png");
+                box.remove();
+            };
+
+            originalBtn.onclick = () => {
+                let target = findTarget();
+                if (!target) return alert("Không tìm thấy ảnh đích trên trang.");
+                target.src = url;
+                box.remove();
+            };
+        };
+    };
+    input.click();
 })();
