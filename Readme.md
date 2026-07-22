@@ -2,7 +2,7 @@
 **Công cụ đổi ảnh load trận Liên Quân Mobile (AoV)**
 
 > ⚠️ **DISCLAIMER - CẢNH BÁO:** 
-> Hành động này được coi là "tri thức cấm", **không được phê duyệt** để sử dụng trong Bình Nguyên Vô Tận. Bạn **có khả năng bị khóa tài khoản (đi tù) ngay lập tức** nếu sử dụng ảnh 18+. Hãy cư xử văn minh, giống con người và tuân thủ tiêu chuẩn cộng đồng!
+> Hành động này được coi là "tri thức cấm", **không được phê duyệt** để sử dụng trong Bình Nguyên Vô Tận. Bạn **có khả năng bị khóa tài khoản (tù ngay)** nếu sử dụng ảnh 18+. Hãy cư xử văn minh, giống con người và tuân thủ tiêu chuẩn cộng đồng!
 >
 > *P/s: Công cụ chỉ hỗ trợ định dạng ảnh tĩnh, **không** dùng được GIF hay Video, khi lưu hãy ấn chỉ lưu.*
 
@@ -18,10 +18,10 @@
   ```javascript
   javascript:(()=>{let s=document.createElement("script");s.src="https://kusaniii.github.io/AoV-change-image-tool/crop.js?t="+Date.now();document.body.appendChild(s)})()
   ```
-* Lưu lại với một cái tên dễ nhớ (ví dụ: *DoiAnhAoV*).
+* Lưu lại với một cái tên dễ nhớ (ví dụ: *Nà ná na na anh Độ Mixi*).
 
 **2. Dành cho PC**
-* Bỏ qua bước này và đọc thẳng xuống **Phần III**.
+* Bỏ qua bước này và làm tiếp **Phần II**.
 
 ---
 
@@ -43,11 +43,11 @@
 
 **1. Trên Mobile**
 * Tại trang web vừa truy cập ở bước II, chạm vào thanh tìm kiếm của trình duyệt.
-* Gõ tên dấu trang bạn đã lưu ở **Phần I** và bấm chọn nó để kích hoạt tool.
+* Gõ tên dấu trang bạn đã lưu ở **Phần I** và bấm chọn nó để kích hoạt **Tri thức cấm**.
 
 **2. Trên PC**
 * Tại trang web vừa truy cập ở bước II, nhấn `F12` (hoặc `Ctrl + Shift + I`) để mở **Dev Tools**.
-* Chuyển sang tab **Console**, dán tri thức cấm sau vào và nhấn `Enter`:
+* Chuyển sang tab **Console**, dán **tri thức cấm** sau vào và nhấn `Enter` để thi triển:
   ```javascript
   (()=>{let s=document.createElement("script");s.src="https://kusaniii.github.io/AoV-change-image-tool/crop.js?t="+Date.now();document.body.appendChild(s)})();
   ```
