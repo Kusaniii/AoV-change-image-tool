@@ -26,7 +26,7 @@
 ---
 
 ### II. Lấy link chỉnh sửa
-*📌 Lưu ý: Link này sẽ **hết hạn trong khoảng 15 phút**, do đó mỗi lần muốn đổi ảnh bạn phải thực hiện lấy lại link.*
+*📌 Lưu ý: Link này chỉ  **tồn tại trong một khoảng thời gian**, do đó mỗi lần muốn đổi ảnh bạn phải thực hiện lấy lại link.*
 
 1. Vào game AoV và truy cập tới màn hình sau:
    ![Hướng dẫn tà thuật](https://i.ibb.co/BHMVVYL9/Screenshot-20260722-104457-com-garena-game-kgvn.jpg)
