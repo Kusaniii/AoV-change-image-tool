@@ -1,189 +1,168 @@
 (() => {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
+const input=document.createElement("input");
+input.type="file";
+input.accept="image/*";
+input.onchange=()=>{
+const file=input.files[0];
+if(!file)return;
+const url=URL.createObjectURL(file);
+const img=new Image();
+img.src=url;
+img.onload=()=>{
+const box=document.createElement("div");
+const canvas=document.createElement("canvas");
+const ctx=canvas.getContext("2d");
+const cropBtn=document.createElement("button");
+const originalBtn=document.createElement("button");
+const resetBtn=document.createElement("button");
 
-  input.onchange = () => {
-    const file = input.files[0];
-    if (!file) return;
+canvas.width=372;
+canvas.height=586;
 
-    const url = URL.createObjectURL(file);
-    const img = new Image();
+box.style="position:fixed;inset:10px;background:#111;z-index:999999;text-align:center;padding:10px";
+canvas.style="width:100%;touch-action:none;display:block";
 
-    img.src = url;
+cropBtn.textContent="Crop";
+originalBtn.textContent="Gốc";
+resetBtn.textContent="Reset";
 
-    img.onload = () => {
-      const box = document.createElement("div");
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+box.append(canvas,cropBtn,originalBtn,resetBtn);
+document.body.append(box);
 
-      const cropBtn = document.createElement("button");
-      const originalBtn = document.createElement("button");
+let scale=Math.max(372/img.width,586/img.height);
+let cropW=372/scale;
+let cropH=586/scale;
 
-      canvas.width = 372;
-      canvas.height = 586;
+let x=(img.width-cropW)/2;
+let y=(img.height-cropH)/2;
 
-      box.style = `
-        position: fixed;
-        inset: 10px;
-        background: #111;
-        z-index: 999999;
-        text-align: center;
-        padding: 10px;
-      `;
+let zoom=1;
+let minZoom=1;
+let maxZoom=3;
 
-      canvas.style = `
-        width: 100%;
-        touch-action: none;
-        display: block;
-      `;
+let dragging=false;
+let lastX=0;
+let lastY=0;
+let lastDist=0;
 
-      cropBtn.textContent = "Crop";
-      originalBtn.textContent = "Gốc";
+function draw(){
+ctx.clearRect(0,0,372,586);
+let w=cropW*zoom;
+let h=cropH*zoom;
+ctx.drawImage(img,x,y,w,h,0,0,372,586);
+}
 
-      box.append(canvas, cropBtn, originalBtn);
-      document.body.append(box);
+function limit(){
+let w=cropW*zoom;
+let h=cropH*zoom;
+x=Math.max(0,Math.min(x,img.width-w));
+y=Math.max(0,Math.min(y,img.height-h));
+}
 
-      let scale = Math.max(
-        372 / img.width,
-        586 / img.height
-      );
+function move(px,py){
+let r=canvas.getBoundingClientRect();
+x-=((px-lastX)/r.width)*cropW;
+y-=((py-lastY)/r.height)*cropH;
+limit();
+lastX=px;
+lastY=py;
+draw();
+}
 
-      let cropW = 372 / scale;
-      let cropH = 586 / scale;
+draw();
 
-      let x = (img.width - cropW) / 2;
-      let y = (img.height - cropH) / 2;
+canvas.addEventListener("pointerdown",e=>{
+dragging=true;
+lastX=e.clientX;
+lastY=e.clientY;
+canvas.setPointerCapture(e.pointerId);
+});
 
-      let dragging = false;
-      let lastX = 0;
-      let lastY = 0;
+canvas.addEventListener("pointermove",e=>{
+if(!dragging)return;
+e.preventDefault();
+move(e.clientX,e.clientY);
+},{passive:false});
 
+canvas.addEventListener("pointerup",()=>{
+dragging=false;
+});
 
-      function draw() {
-        ctx.clearRect(0, 0, 372, 586);
+canvas.addEventListener("touchmove",e=>{
+if(e.touches.length===2){
+e.preventDefault();
 
-        ctx.drawImage(
-          img,
-          x,
-          y,
-          cropW,
-          cropH,
-          0,
-          0,
-          372,
-          586
-        );
-      }
+let a=e.touches[0];
+let b=e.touches[1];
 
+let cx=((a.clientX+b.clientX)/2-canvas.getBoundingClientRect().left)/canvas.getBoundingClientRect().width*372;
+let cy=((a.clientY+b.clientY)/2-canvas.getBoundingClientRect().top)/canvas.getBoundingClientRect().height*586;
 
-      draw();
+let dist=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);
 
+if(lastDist){
+let oldZoom=zoom;
 
-      function move(px, py) {
-        const rect = canvas.getBoundingClientRect();
+zoom+=(dist-lastDist)/300;
+zoom=Math.max(minZoom,Math.min(maxZoom,zoom));
 
-        x -= ((px - lastX) / rect.width) * cropW;
-        y -= ((py - lastY) / rect.height) * cropH;
+let ratio=zoom/oldZoom;
 
-        x = Math.max(
-          0,
-          Math.min(x, img.width - cropW)
-        );
+x+=(cx/oldZoom)*(1-ratio);
+y+=(cy/oldZoom)*(1-ratio);
 
-        y = Math.max(
-          0,
-          Math.min(y, img.height - cropH)
-        );
+limit();
+draw();
+}
 
-        lastX = px;
-        lastY = py;
+lastDist=dist;
+}
+},{passive:false});
 
-        draw();
-      }
+canvas.addEventListener("touchend",()=>{
+lastDist=0;
+});
 
+canvas.addEventListener("wheel",e=>{
+e.preventDefault();
+zoom+=e.deltaY<0?0.1:-0.1;
+zoom=Math.max(minZoom,Math.min(maxZoom,zoom));
+limit();
+draw();
+},{passive:false});
 
-      canvas.addEventListener("pointerdown", e => {
-        dragging = true;
+resetBtn.onclick=()=>{
+zoom=1;
+cropW=372/scale;
+cropH=586/scale;
+x=(img.width-cropW)/2;
+y=(img.height-cropH)/2;
+draw();
+};
 
-        lastX = e.clientX;
-        lastY = e.clientY;
+function findTarget(){
+return [...document.images].find(img=>{
+let r=img.getBoundingClientRect();
+return Math.abs(r.width-372)<20&&Math.abs(r.height-586)<20;
+});
+}
 
-        canvas.setPointerCapture(e.pointerId);
-      });
+cropBtn.onclick=()=>{
+let target=findTarget();
+if(!target)return alert("Không tìm thấy ảnh");
+target.src=canvas.toDataURL("image/png");
+box.remove();
+alert("Done");
+};
 
-
-      canvas.addEventListener(
-        "pointermove",
-        e => {
-          if (!dragging) return;
-
-          e.preventDefault();
-
-          move(
-            e.clientX,
-            e.clientY
-          );
-        },
-        {
-          passive: false
-        }
-      );
-
-
-      canvas.addEventListener(
-        "pointerup",
-        () => {
-          dragging = false;
-        }
-      );
-
-
-      function findTarget() {
-        return [...document.images].find(img => {
-          const r = img.getBoundingClientRect();
-
-          return (
-            Math.abs(r.width - 372) < 20 &&
-            Math.abs(r.height - 586) < 20
-          );
-        });
-      }
-
-
-      cropBtn.onclick = () => {
-        const target = findTarget();
-
-        if (!target) {
-          alert("Không tìm thấy ảnh");
-          return;
-        }
-
-        target.src = canvas.toDataURL("image/png");
-
-        box.remove();
-
-        alert("Done");
-      };
-
-
-      originalBtn.onclick = () => {
-        const target = findTarget();
-
-        if (!target) {
-          alert("Không tìm thấy ảnh");
-          return;
-        }
-
-        target.src = url;
-
-        box.remove();
-
-        alert("Done");
-      };
-    };
-  };
-
-
-  input.click();
+originalBtn.onclick=()=>{
+let target=findTarget();
+if(!target)return alert("Không tìm thấy ảnh");
+target.src=url;
+box.remove();
+alert("Done");
+};
+};
+};
+input.click();
 })();
