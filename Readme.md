@@ -12,7 +12,7 @@
 
 ### I. Học bí kíp tà thuật (Bước chuẩn bị)
 
-**1. Dành cho Mobile**
+**1. Dành cho Android**
 * Tạo một dấu trang (bookmark) bất kỳ trên trình duyệt.
 * Vào mục chỉnh sửa dấu trang, đổi URL của dấu trang thành "thần chú" (đoạn mã) dưới đây:
   ```javascript
@@ -25,7 +25,8 @@
 
 ---
 
-### II. Lấy link chỉnh sửa
+### II. Lấy link chỉnh sửa Android
+
 *📌 Lưu ý: Link này chỉ  **tồn tại trong một khoảng thời gian**, do đó mỗi lần muốn đổi ảnh bạn phải thực hiện lấy lại link.*
 
 1. Vào game AoV và truy cập tới màn hình sau:
