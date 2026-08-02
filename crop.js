@@ -192,7 +192,7 @@
             function findTarget() {
                 return [...document.images].find(img => {
                     let r = img.getBoundingClientRect();
-                    return Math.abs(r.width - 372) < 20 && Math.abs(r.height - 586) < 20;
+                    return Math.abs(r.width - 372) < 30 && Math.abs(r.height - 586) < 30;
                 });
             }
 
